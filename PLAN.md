@@ -6,11 +6,15 @@ ValorStone Network is a role-playing system for Minecraft, integrated with a Dis
 
 ## Key Features
 - Central API for all data and account linking
-- Website for registration, character/nation/lore management, and economy dashboard
-- Discord bot for quick info, notifications, and moderation
-- Minecraft plugin for gameplay enforcement, account linking, and roleplay mechanics
+- Website with Minecraft-themed UI (pixelated fonts, book textures, item hover effects)
+- Character creation with detailed forms (Name, Age, Family connections, extensive Lore)
+- Wikipedia-style lore editing with draft system and version control
+- Discord bot for quick info retrieval and moderation (/loresee, /mod commands)
+- Minecraft plugin for gameplay enforcement and extensive event logging
 - AI and manual moderation for lore and character creation
 - Hardcore mode and nation mechanics for immersive roleplay
+- Economy system with national banks backed by rare items
+- Maintenance mode with database rollback capabilities
 
 ## Technologies
 - Website & API: Python (Flask, Flask-RESTful)
@@ -37,11 +41,14 @@ ValorStone Network is a role-playing system for Minecraft, integrated with a Dis
 ## Gameplay & Economy
 - Hardcore mode (death by player triggers ban until new character created, toggleable for future)
 - Nation mechanics (staff-created nations initially, user towns allowed, leader rotation encouraged)
-- Resource management and economy mostly player-driven with initial preparation design
+- Economy system with national banks backed by rare items (gold-standard simulation)
+- Resource scarcity management through external plugins and world generation limits
 - Status sync via API (job status, health status, bank balance, season data, current age progression)
 - Cannot join server without verified character and account linking
-- Motivational content created by players, staff may intervene for balance
-- Special world designs for resource distribution and nation mechanics
+- Lore categorization system (Nation, Town, Character, Events - wars, reforms, age progression)
+- Character stats system (individual stats optional but suggested, generic lore for details)
+- Hyperlinking and referencing system for lore interconnections
+- Player-driven motivational content with staff balance intervention when needed
 
 ## Extensibility & Future Features
 - Families prioritized for new player onboarding after server start (family-based joining system)

@@ -16,21 +16,27 @@ ValorStone Network is a role-playing system for Minecraft, integrated with a Dis
 - Manages strikes (max 3), bans, and punishment system across all platforms.
 
 ### 2. Website (Flask)
-- Modern Minecraft-inspired UI (pixelated fonts, themed graphics and buttons).
+- Modern Minecraft-inspired UI (pixelated fonts, themed buttons, book textures, item hover context windows).
 - Account registration with light application process (special tricks to confirm rule reading).
 - Account verification (Discord & Minecraft linking, ALT detection, roleplay acknowledgment).
-- Character creation with lore, features, age, etc. (moderator review required, Discord notifications).
+- Character creation form (Name, Surname, Additional name, Age, Family connections, extensive Lore description).
+- Smart family connections system (Partner, mother, father - links to existing characters only).
+- Wikipedia-style lore editing interface with draft system for verification-required changes.
 - Nation browsing (staff-created initially), town creation by users, leader rotation system.
-- Lore browsing, creation, and editing (AI moderation for lore, manual review for characters).
-- Economy dashboard with public/private data access (historical lore public, personal data restricted).
-- Read-only access for unregistered users (lore search and browsing only).
-- Moderator panel with moderation mode (invisible actions, punishment tools).
+- Economy dashboard with public leaderboard for balances, private transaction handling.
+- Read-only access for unregistered users (lore search and browsing with word/tag filtering).
+- Moderator panel ("To verify" queue, character management, player ban/strike management).
+- Maintenance mode system with database rollback capabilities.
 
 ### 3. Discord Bot (Pycord)
-- Quick lore lookup and info retrieval (character info, nation data, public information).
+- Lore lookup commands (/loresee for characters, nations, events with neat embed responses).
 - Account linking via unique daily code system.
-- Notifications (lore verification status, nation events, wars, bans, character approval).
-- Character info commands (view own character details, limited public character info).
+- Moderation commands (/mod ban/tempban/unban/strike/removestrike for quick moderation).
+- Notifications (lore verification, character approval, nation events, wars, system alerts).
+- Error handling with staff notification and user feedback via tickets.
+- Easy command extensibility through API endpoints.
+- Integration with forum/discussion (handled via Discord server channels).
+- Activity tracking for cross-platform user status sync.
 - Moderation tools (lore verification, punishments, strikes management).
 - Easy to scale with new commands and features.
 - Integration with forum/discussion (handled via Discord server, not website).
@@ -40,8 +46,12 @@ ValorStone Network is a role-playing system for Minecraft, integrated with a Dis
 - Join restrictions (verified character required for server access).
 - Roleplay mechanics sync (job status, health status, bank balance, season data, current age).
 - Hardcore mode (death by player triggers ban until new character created, toggleable feature).
-- Nation and group mechanics (resource management mostly player-driven, special world designs).
+- Nation and town integration (self-managed or external plugin sync with out-of-sync notifications).
 - Manual bans/restrictions by moderators (report-based or moderator observation).
+- Extensive event logging system (wars, deaths, status changes, new players).
+- API failure handling (maintenance mode trigger, health checks, staff notifications).
+- Moderation mode for staff (invisible actions, same roleplay rules as players normally).
+- Performance monitoring integration (Spark plugin) with alert system.
 - Moderation mode for staff (invisible actions, same roleplay rules as players normally).
 - Integration with external plugins (towns system, economy, seasonal progression).
 

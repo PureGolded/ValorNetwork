@@ -1,4 +1,20 @@
-# This documentation will serve for engineers to know how to project will be coded, how it will work etc.
+# This documentation will serve for engineers to know ho## Data Model (Draft)
+-## AI Moderation
+- Custom AI prompts for lore moderation (low temperature, experimentation-based).
+- Rules enforcement: no unfair advantages, no immortality/invincibility, no real-life copies, no character repetition.
+- Manual moderator review required for character creation (not AI).
+- Appeals process via Discord notifications and tickets.
+- Repeat offender handling: permanent ban across all systems.
+- Content formatting: Markdown support with character/lore hyperlinking and referencing.:** id, discord_id, minecraft_uuid, verified, characters, nations, strikes, ban_status, application_data, activity_status
+- **Character:** id, name, surname, additional_name, age, family_connections, lore, nation, approval_status, stats
+- **Nation:** id, name, members, resources, lore, leader, towns, rotation_schedule, bank_balance
+- **Town:** id, name, nation_id, members, resources, founder, creation_date
+- **Lore:** id, title, content, author, verified, public/private, ai_moderation_status, category, tags, references
+- **LoreVersion:** id, lore_id, content, timestamp, author, status
+- **Economy:** id, user_id, balance, transactions, bank_transfers
+- **Punishment:** id, user_id, type, reason, moderator, timestamp, active
+- **LinkingCode:** user_id, code, expiry_date, platforms_linked, status
+- **LogEntry:** id, timestamp, severity, plugin, action, details, user_idject will be coded, how it will work etc.
 
 # ValorStone Network Technical Plan
 
@@ -25,15 +41,16 @@
 - Public/private data access control (historical lore public, personal data restricted).
 
 ### 2. Website
-- Flask frontend with Minecraft-themed UI (pixelated fonts, themed buttons and graphics).
+- Flask frontend with Minecraft-themed UI (pixelated fonts, themed buttons, book textures, item hover context).
 - User registration with light application process (special tricks to confirm rule reading).
-- Account linking system (Discord & Minecraft via daily codes, ALT detection).
-- Character creation interface (age, features, lore input, moderator review workflow).
-- Nation management (staff-created nations, user towns, leader rotation system).
-- Lore management interfaces (AI moderation for lore, browse/search functionality).
-- Economy visualization (public/private data access, transaction history).
-- Moderator/admin panel (moderation mode toggle, invisible actions, punishment tools).
-- Read-only access for unregistered users (lore search and browsing only).
+- Character creation interface (Name, Surname, Additional name, Age, Family connections, extensive Lore).
+- Smart family connection system (links only to existing verified characters).
+- Wikipedia-style lore editing with draft system (owner edits, verification workflow).
+- Economy visualization (public balance leaderboards, private transaction handling).
+- Search and filtering system (word search, tag filtering, lore categories).
+- Moderator panel (verification queue, character/player management, ban/strike tools).
+- Maintenance mode with database rollback capabilities.
+- Extensive logging system with web interface (severity filtering, plugin grouping).
 
 ### 3. Discord Bot
 - Pycord bot with commands for character info, nation data, public information retrieval.
