@@ -1,4 +1,3 @@
-# This is the main plan, featuring almost everything without too much technical things, more to inform colaborators or spectators about the plan in detail.
 # ValorStone Network - Project Plan
 
 ## Project Purpose
@@ -16,47 +15,44 @@ ValorStone Network is a role-playing system for Minecraft, integrated with a Dis
 - Economy system with national banks backed by rare items
 - Maintenance mode with database rollback capabilities
 
-## Technologies
-- Website & API: Python (Flask, Flask-RESTful)
-- Discord Bot: Python (Pycord)
-- Minecraft Plugin: Java (Spigot API)
-- Database: SQLite3 (initial)
+## How It Works
+The ValorStone Network connects three platforms that players use:
+- **Website**: Where you create characters, write lore, and manage your account
+- **Discord Server**: Where you can quickly look up information and get community updates  
+- **Minecraft Server**: Where the actual roleplay gameplay happens
 
-## Account Verification & Linking
-- Registration requires a light application process with special tricks to confirm rule reading
-- Must acknowledge that roleplay doesn't always end as players want, accept compromises
-- Account linking via unique daily code system (same code valid for one day, used on website and Discord)
-- Character creation requires moderator review and Discord notification
-- ALT detection to prevent banned players from rejoining
-- Initial character and lore must be verified before server access
+All three platforms share the same information, so your character details, lore, and account status stay synchronized everywhere.
 
-## Moderation & AI
-- AI moderation for lore creation/editing (prevents unfair advantages, inappropriate content, immortality/invincibility)
-- Manual moderator review for character creation and major changes (hand review, not AI)
-- User report mechanism via tickets and evidence for unfair advantages or inappropriate content
-- Strikes system (maximum 3 strikes) and punishments linked across all systems
-- Common sense rules: no targeted/rude content, no character repetition, no real-life copies
-- Moderators have same roleplay rules as players, can enter invisible moderation mode when needed
+## Getting Started & Verification
+- New players must complete a registration process that includes reading the rules carefully
+- You'll need to connect your Discord account, website account, and Minecraft account together
+- Every day, you'll get a unique code that works across all platforms to prove your identity
+- Before you can play, your character must be reviewed and approved by our moderation team
+- The system can detect if banned players try to return with new accounts
 
-## Gameplay & Economy
-- Hardcore mode (death by player triggers ban until new character created, toggleable for future)
-- Nation mechanics (staff-created nations initially, user towns allowed, leader rotation encouraged)
-- Economy system with national banks backed by rare items (gold-standard simulation)
-- Resource scarcity management through external plugins and world generation limits
-- Status sync via API (job status, health status, bank balance, season data, current age progression)
-- Cannot join server without verified character and account linking
-- Lore categorization system (Nation, Town, Character, Events - wars, reforms, age progression)
-- Character stats system (individual stats optional but suggested, generic lore for details)
-- Hyperlinking and referencing system for lore interconnections
-- Player-driven motivational content with staff balance intervention when needed
+## Keeping Things Fair & Safe
+- **Automated Content Review**: Computer systems help check that new lore follows the rules (no overpowered characters, no inappropriate content)
+- **Human Moderators**: Real people review all new characters and major changes to ensure quality
+- **Reporting System**: Players can report problems or unfair advantages through a ticket system
+- **Strike System**: Players who break rules get warnings (up to 3 strikes) before being banned
+- **Cross-Platform Enforcement**: If you're banned on one platform, it applies to all platforms
+- **Fair Play Rules**: No copying real people, no creating the same character multiple times, no targeted harassment
 
-## Extensibility & Future Features
-- Families prioritized for new player onboarding after server start (family-based joining system)
-- Wars, professions, jobs, titles planned for future updates
-- System designed to be complete before launch, not modular during operation
-- Scalable database and API design, but no scaling expected initially
-- Most features should be prepared before usage rather than added during operation
-- Discord integration for forum/discussion (not on website)
+## The Roleplay Experience
+- **High Stakes**: When your character dies in combat with another player, you're temporarily banned until you create a new character
+- **Nations and Politics**: Start by joining staff-created nations, with the possibility to create your own towns later
+- **Player-Driven Economy**: The economy is based on rare items (like a gold standard) and run by players
+- **Rich Storytelling**: Your character needs detailed background story, family connections, and ongoing lore
+- **Interconnected World**: All player stories connect through a system of references and links
+- **Character Requirements**: You must have an approved character and linked accounts before joining the Minecraft server
+- **Organized Lore**: Stories are categorized by Nations, Towns, Characters, and Events for easy browsing
+
+## Future Plans & Growth
+- **Family-Focused Joining**: After the server launches, new players will be encouraged to join existing families
+- **Upcoming Features**: Wars between nations, job systems, professional titles, and more are planned for later updates
+- **Complete at Launch**: Most features will be ready when the server opens, rather than being added during gameplay
+- **Community Discussions**: Discord will be used for community forums and discussions (not the website)
+- **Balanced Growth**: The system is designed to handle growth, but we're planning to start small and focused
 
 ## Open Questions & Suggestions
 - See QUESTIONS.md for ongoing design considerations and staff suggestions
