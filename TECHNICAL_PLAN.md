@@ -48,139 +48,209 @@ ValorStone Network follows a microservices architecture with a central API actin
 
 ## Database Schema Design
 
-### Core Tables
+The database design uses **Prisma ORM** with **PostgreSQL** for production and **SQLite** for development. The schema is defined in `prisma/schema.prisma` and includes comprehensive relationships and modern features.
 
-```sql
--- User management and authentication
-CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    discord_id TEXT UNIQUE,
-    minecraft_uuid TEXT UNIQUE,
-    verified BOOLEAN DEFAULT FALSE,
-    strikes INTEGER DEFAULT 0,
-    ban_status TEXT DEFAULT 'none', -- none, temp, permanent
-    ban_expiry DATETIME,
-    application_data TEXT, -- JSON
-    activity_status TEXT DEFAULT 'offline',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+### Core Database Models
 
--- Character information and roleplay data
-CREATE TABLE characters (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER REFERENCES users(id),
-    name TEXT NOT NULL,
-    surname TEXT,
-    additional_name TEXT,
-    age INTEGER,
-    family_connections TEXT, -- JSON with references to other character IDs
-    lore TEXT, -- Extensive character background
-    nation_id INTEGER REFERENCES nations(id),
-    approval_status TEXT DEFAULT 'pending', -- pending, approved, rejected
-    stats TEXT, -- JSON for character stats (optional)
-    health_status TEXT DEFAULT 'healthy',
-    job_status TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+```prisma
+// User accounts and authentication
+model User {
+  id              Int       @id @default(autoincrement())
+  email           String    @unique
+  username        String    @unique
+  discordId       String?   @unique
+  minecraftUuid   String?   @unique
+  verified        Boolean   @default(false)
+  strikes         Int       @default(0)
+  banStatus       String    @default("none") // none, temp, permanent
+  banExpiry       DateTime?
+  applicationData Json?
+  activityStatus  String    @default("offline")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
--- Nation and political structure
-CREATE TABLE nations (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    leader_id INTEGER REFERENCES characters(id),
-    lore TEXT,
-    bank_balance INTEGER DEFAULT 0,
-    rotation_schedule TEXT, -- JSON for leadership rotation
-    resources TEXT, -- JSON for nation resources
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+  // Relations
+  characters      Character[]
+  loreEntries     Lore[]
+  punishments     Punishment[]
+  linkingCodes    LinkingCode[]
+  logEntries      LogEntry[]
 
--- Town management within nations
-CREATE TABLE towns (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    nation_id INTEGER REFERENCES nations(id),
-    founder_id INTEGER REFERENCES characters(id),
-    members TEXT, -- JSON array of character IDs
-    resources TEXT, -- JSON for town-specific resources
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+  @@map("users")
+}
 
--- Lore management with versioning
-CREATE TABLE lore (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    content TEXT NOT NULL,
-    author_id INTEGER REFERENCES users(id),
-    category TEXT, -- Nation, Town, Character, Events
-    tags TEXT, -- JSON array of tags
-    verified BOOLEAN DEFAULT FALSE,
-    public BOOLEAN DEFAULT TRUE,
-    ai_moderation_status TEXT DEFAULT 'pending',
-    references TEXT, -- JSON array of hyperlinks to other lore
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+// Character information and roleplay data
+model Character {
+  id                Int       @id @default(autoincrement())
+  userId            Int
+  name              String
+  surname           String?
+  additionalName    String?
+  age               Int?
+  familyConnections Json?     // References to other character IDs
+  lore              String    // Extensive character background
+  nationId          Int?
+  approvalStatus    String    @default("pending") // pending, approved, rejected
+  stats             Json?     // Optional character stats
+  healthStatus      String    @default("healthy")
+  jobStatus         String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
--- Lore version control
-CREATE TABLE lore_versions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    lore_id INTEGER REFERENCES lore(id),
-    content TEXT NOT NULL,
-    author_id INTEGER REFERENCES users(id),
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    status TEXT DEFAULT 'draft' -- draft, approved, rejected
-);
+  // Relations
+  user              User      @relation(fields: [userId], references: [id])
+  nation            Nation?   @relation(fields: [nationId], references: [id])
+  ledNations        Nation[]  @relation("NationLeader")
+  foundedTowns      Town[]    @relation("TownFounder")
 
--- Economic transactions
-CREATE TABLE economy (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER REFERENCES users(id),
-    balance INTEGER DEFAULT 0,
-    last_transaction DATETIME,
-    bank_transfers TEXT, -- JSON array of transfer history
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+  @@map("characters")
+}
 
--- Moderation and punishment system
-CREATE TABLE punishments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER REFERENCES users(id),
-    type TEXT NOT NULL, -- strike, tempban, permban, warning
-    reason TEXT NOT NULL,
-    moderator_id INTEGER REFERENCES users(id),
-    active BOOLEAN DEFAULT TRUE,
-    expires_at DATETIME,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+// Nation and political structure
+model Nation {
+  id               Int       @id @default(autoincrement())
+  name             String    @unique
+  leaderId         Int?
+  lore             String?
+  bankBalance      Int       @default(0)
+  rotationSchedule Json?     // Leadership rotation data
+  resources        Json?     // Nation resources
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
--- Account linking system
-CREATE TABLE linking_codes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER REFERENCES users(id),
-    code TEXT NOT NULL UNIQUE,
-    platforms_linked TEXT, -- JSON array: discord, minecraft, website
-    expiry_date DATE NOT NULL,
-    status TEXT DEFAULT 'active', -- active, used, expired
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+  // Relations
+  leader           Character? @relation("NationLeader", fields: [leaderId], references: [id])
+  members          Character[]
+  towns            Town[]
 
--- Comprehensive logging system
-CREATE TABLE log_entries (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    severity TEXT NOT NULL, -- debug, info, warning, error, critical
-    plugin TEXT, -- api, website, discord, minecraft
-    action TEXT NOT NULL,
-    details TEXT, -- JSON with detailed information
-    user_id INTEGER REFERENCES users(id)
-);
+  @@map("nations")
+}
+
+// Town management within nations
+model Town {
+  id         Int       @id @default(autoincrement())
+  name       String
+  nationId   Int?
+  founderId  Int
+  members    Json      // Array of character IDs
+  resources  Json?     // Town-specific resources
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  // Relations
+  nation     Nation?   @relation(fields: [nationId], references: [id])
+  founder    Character @relation("TownFounder", fields: [founderId], references: [id])
+
+  @@map("towns")
+}
+
+// Lore management with versioning
+model Lore {
+  id                   Int           @id @default(autoincrement())
+  title                String
+  content              String
+  authorId             Int
+  category             String        // Nation, Town, Character, Events
+  tags                 Json          // Array of tags
+  verified             Boolean       @default(false)
+  public               Boolean       @default(true)
+  aiModerationStatus   String        @default("pending")
+  references           Json?         // Array of hyperlinks to other lore
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  // Relations
+  author               User          @relation(fields: [authorId], references: [id])
+  versions             LoreVersion[]
+
+  @@map("lore")
+}
+
+// Lore version control
+model LoreVersion {
+  id        Int      @id @default(autoincrement())
+  loreId    Int
+  content   String
+  authorId  Int
+  timestamp DateTime @default(now())
+  status    String   @default("draft") // draft, approved, rejected
+
+  // Relations
+  lore      Lore     @relation(fields: [loreId], references: [id])
+
+  @@map("lore_versions")
+}
+
+// Economic transactions
+model Economy {
+  id              Int       @id @default(autoincrement())
+  userId          Int       @unique
+  balance         Int       @default(0)
+  lastTransaction DateTime?
+  bankTransfers   Json?     // Array of transfer history
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("economy")
+}
+
+// Moderation and punishment system
+model Punishment {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  type        String    // strike, tempban, permban, warning
+  reason      String
+  moderatorId Int
+  active      Boolean   @default(true)
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@map("punishments")
+}
+
+// Account linking system
+model LinkingCode {
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  code             String   @unique
+  platformsLinked  Json     // Array: discord, minecraft, website
+  expiryDate       DateTime
+  status           String   @default("active") // active, used, expired
+  createdAt        DateTime @default(now())
+
+  // Relations
+  user             User     @relation(fields: [userId], references: [id])
+
+  @@map("linking_codes")
+}
+
+// Comprehensive logging system
+model LogEntry {
+  id         Int      @id @default(autoincrement())
+  timestamp  DateTime @default(now())
+  severity   String   // debug, info, warning, error, critical
+  plugin     String   // api, website, discord, minecraft
+  action     String
+  details    Json?    // Detailed information
+  userId     Int?
+
+  // Relations
+  user       User?    @relation(fields: [userId], references: [id])
+
+  @@map("log_entries")
+}
 ```
+
+### Key Features of the Schema:
+- **Type Safety**: Full TypeScript support with generated types
+- **Relationships**: Proper foreign key constraints and relations
+- **JSON Support**: Flexible JSON fields for complex data structures
+- **Migrations**: Automatic migration generation and management
+- **Database Agnostic**: Works with PostgreSQL (production) and SQLite (development)
+- **Modern Syntax**: Uses Prisma's declarative schema language
 
 ## API Endpoint Specification
 
