@@ -19,29 +19,29 @@
 # ValorStone Network Technical Plan
 
 ## Technologies
-- **Website & API:** Python (Flask, Flask-RESTful)
+- **Website & API:** Node.js (Next.js, Express.js, TypeScript)
 - **Discord Bot:** Python (Pycord)
 - **Minecraft Plugin:** Java (Spigot API)
-- **Database:** SQLite3 (chosen for initial implementation, upgradeable)
+- **Database:** PostgreSQL (production), SQLite3 (development)
 
 ## System Architecture
-- Central API (Flask RESTful) for all data operations.
-- Website and Discord bot are clients to the API.
+- Central API (Node.js/Express.js) for all data operations.
+- Website (Next.js/React) and Discord bot are clients to the API.
 - Minecraft plugin communicates with API via HTTP requests.
 - All account linking and verification handled via API.
 
 ## Modules
 ### 1. API
 - Endpoints for lore, player data, economy, bans, nations, characters.
-- Authentication (OAuth2 for Discord, custom for Minecraft).
-- Data validation and moderation (AI for lore, manual for characters).
+- Authentication (NextAuth.js for Discord OAuth2, custom JWT for Minecraft).
+- Data validation and moderation (OpenAI for lore, manual for characters).
 - Account linking via unique daily code system (same code for one day per player).
 - Handles strikes (max 3), bans, and punishment tracking.
 - ALT detection and verification checks.
 - Public/private data access control (historical lore public, personal data restricted).
 
 ### 2. Website
-- Flask frontend with Minecraft-themed UI (pixelated fonts, themed buttons, book textures, item hover context).
+- Next.js frontend with Minecraft-themed UI (pixelated fonts, themed buttons, book textures, item hover context).
 - User registration with light application process (special tricks to confirm rule reading).
 - Character creation interface (Name, Surname, Additional name, Age, Family connections, extensive Lore).
 - Smart family connection system (links only to existing verified characters).

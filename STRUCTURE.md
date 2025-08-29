@@ -9,13 +9,13 @@ ValorStone Network is a role-playing system for Minecraft, integrated with a Dis
 
 ### 1. Main API
 - Central data hub, hosted with the website.
-- RESTful API for all network services.
-- Database for lore, player data, economy, bans, etc. (SQLite3 chosen for initial implementation)
+- RESTful API built with Node.js and Express.js for all network services.
+- Database for lore, player data, economy, bans, etc. (PostgreSQL for production, SQLite3 for development)
 - Account linking (Minecraft, Discord, Website) via unique daily codes.
 - Handles verification, moderation, and data sync.
 - Manages strikes (max 3), bans, and punishment system across all platforms.
 
-### 2. Website (Flask)
+### 2. Website (Next.js)
 - Modern Minecraft-inspired UI (pixelated fonts, themed buttons, book textures, item hover context windows).
 - Account registration with light application process (special tricks to confirm rule reading).
 - Account verification (Discord & Minecraft linking, ALT detection, roleplay acknowledgment).
@@ -78,8 +78,8 @@ ValorStone Network is a role-playing system for Minecraft, integrated with a Dis
 ---
 
 # Technical Stack
-- Website: Python (Flask)
+- Website: Node.js (Next.js + React)
 - Discord Bot: Python (Pycord)
 - Minecraft Plugin: Java (Spigot API)
-- API: Python (Flask RESTful)
-- Database: To be decided (SQL/NoSQL)
+- API: Node.js (Express.js + TypeScript)
+- Database: PostgreSQL (production), SQLite3 (development)

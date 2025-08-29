@@ -10,7 +10,7 @@ ValorStone Network follows a microservices architecture with a central API actin
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Website       │    │  Discord Bot    │    │ Minecraft Plugin│
-│   (Flask)       │    │   (Pycord)      │    │   (Spigot API)  │
+│ (Next.js/React) │    │   (Pycord)      │    │   (Spigot API)  │
 └─────────┬───────┘    └─────────┬───────┘    └─────────┬───────┘
           │                      │                      │
           │              HTTP API Calls                 │
@@ -19,165 +19,238 @@ ValorStone Network follows a microservices architecture with a central API actin
                                  │
                     ┌─────────────────┐
                     │   Central API   │
-                    │ (Flask RESTful) │
+                    │(Node.js/Express)│
                     │                 │
-                    │   SQLite3 DB    │
+                    │  PostgreSQL DB  │
                     └─────────────────┘
 ```
 
 ## Technology Stack
 
 ### Core Technologies
-- **Backend API**: Python 3.11+ with Flask and Flask-RESTful
-- **Frontend**: Python Flask with Jinja2 templating, HTML5, CSS3, JavaScript
+- **Backend API**: Node.js 18+ with Next.js API routes and Express.js
+- **Frontend**: Next.js with React 18+, TypeScript, Tailwind CSS
 - **Discord Bot**: Python with Pycord library
 - **Minecraft Plugin**: Java 17+ with Spigot API 1.20+
-- **Database**: SQLite3 (initial implementation, upgradeable to PostgreSQL)
-- **Authentication**: OAuth2 for Discord, custom JWT for Minecraft/Website
+- **Database**: PostgreSQL 15+ (production), SQLite3 (development)
+- **Authentication**: NextAuth.js for OAuth2 Discord integration, JWT for Minecraft
+- **Real-time Communication**: Socket.io for WebSocket functionality
 - **AI Integration**: OpenAI API for content moderation
 
 ### Development Tools
 - **Version Control**: Git with GitHub
+- **Package Management**: npm/yarn for Node.js dependencies
 - **Containerization**: Docker for API and Website deployment
-- **Testing**: pytest for Python components, JUnit for Java plugin
+- **Testing**: Jest for JavaScript components, JUnit for Java plugin
 - **Documentation**: Markdown with GitHub Pages
 - **CI/CD**: GitHub Actions for automated testing and deployment
+- **Code Quality**: ESLint, Prettier, TypeScript for frontend/backend
 
 ## Database Schema Design
 
-### Core Tables
+The database design uses **Prisma ORM** with **PostgreSQL** for production and **SQLite** for development. The schema is defined in `prisma/schema.prisma` and includes comprehensive relationships and modern features.
 
-```sql
--- User management and authentication
-CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    discord_id TEXT UNIQUE,
-    minecraft_uuid TEXT UNIQUE,
-    verified BOOLEAN DEFAULT FALSE,
-    strikes INTEGER DEFAULT 0,
-    ban_status TEXT DEFAULT 'none', -- none, temp, permanent
-    ban_expiry DATETIME,
-    application_data TEXT, -- JSON
-    activity_status TEXT DEFAULT 'offline',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+### Core Database Models
 
--- Character information and roleplay data
-CREATE TABLE characters (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER REFERENCES users(id),
-    name TEXT NOT NULL,
-    surname TEXT,
-    additional_name TEXT,
-    age INTEGER,
-    family_connections TEXT, -- JSON with references to other character IDs
-    lore TEXT, -- Extensive character background
-    nation_id INTEGER REFERENCES nations(id),
-    approval_status TEXT DEFAULT 'pending', -- pending, approved, rejected
-    stats TEXT, -- JSON for character stats (optional)
-    health_status TEXT DEFAULT 'healthy',
-    job_status TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+```prisma
+// User accounts and authentication
+model User {
+  id              Int       @id @default(autoincrement())
+  email           String    @unique
+  username        String    @unique
+  discordId       String?   @unique
+  minecraftUuid   String?   @unique
+  verified        Boolean   @default(false)
+  strikes         Int       @default(0)
+  banStatus       String    @default("none") // none, temp, permanent
+  banExpiry       DateTime?
+  applicationData Json?
+  activityStatus  String    @default("offline")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
--- Nation and political structure
-CREATE TABLE nations (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE,
-    leader_id INTEGER REFERENCES characters(id),
-    lore TEXT,
-    bank_balance INTEGER DEFAULT 0,
-    rotation_schedule TEXT, -- JSON for leadership rotation
-    resources TEXT, -- JSON for nation resources
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+  // Relations
+  characters      Character[]
+  loreEntries     Lore[]
+  punishments     Punishment[]
+  linkingCodes    LinkingCode[]
+  logEntries      LogEntry[]
 
--- Town management within nations
-CREATE TABLE towns (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    nation_id INTEGER REFERENCES nations(id),
-    founder_id INTEGER REFERENCES characters(id),
-    members TEXT, -- JSON array of character IDs
-    resources TEXT, -- JSON for town-specific resources
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+  @@map("users")
+}
 
--- Lore management with versioning
-CREATE TABLE lore (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    content TEXT NOT NULL,
-    author_id INTEGER REFERENCES users(id),
-    category TEXT, -- Nation, Town, Character, Events
-    tags TEXT, -- JSON array of tags
-    verified BOOLEAN DEFAULT FALSE,
-    public BOOLEAN DEFAULT TRUE,
-    ai_moderation_status TEXT DEFAULT 'pending',
-    references TEXT, -- JSON array of hyperlinks to other lore
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+// Character information and roleplay data
+model Character {
+  id                Int       @id @default(autoincrement())
+  userId            Int
+  name              String
+  surname           String?
+  additionalName    String?
+  age               Int?
+  familyConnections Json?     // References to other character IDs
+  lore              String    // Extensive character background
+  nationId          Int?
+  approvalStatus    String    @default("pending") // pending, approved, rejected
+  stats             Json?     // Optional character stats
+  healthStatus      String    @default("healthy")
+  jobStatus         String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
--- Lore version control
-CREATE TABLE lore_versions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    lore_id INTEGER REFERENCES lore(id),
-    content TEXT NOT NULL,
-    author_id INTEGER REFERENCES users(id),
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    status TEXT DEFAULT 'draft' -- draft, approved, rejected
-);
+  // Relations
+  user              User      @relation(fields: [userId], references: [id])
+  nation            Nation?   @relation(fields: [nationId], references: [id])
+  ledNations        Nation[]  @relation("NationLeader")
+  foundedTowns      Town[]    @relation("TownFounder")
 
--- Economic transactions
-CREATE TABLE economy (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER REFERENCES users(id),
-    balance INTEGER DEFAULT 0,
-    last_transaction DATETIME,
-    bank_transfers TEXT, -- JSON array of transfer history
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+  @@map("characters")
+}
 
--- Moderation and punishment system
-CREATE TABLE punishments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER REFERENCES users(id),
-    type TEXT NOT NULL, -- strike, tempban, permban, warning
-    reason TEXT NOT NULL,
-    moderator_id INTEGER REFERENCES users(id),
-    active BOOLEAN DEFAULT TRUE,
-    expires_at DATETIME,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+// Nation and political structure
+model Nation {
+  id               Int       @id @default(autoincrement())
+  name             String    @unique
+  leaderId         Int?
+  lore             String?
+  bankBalance      Int       @default(0)
+  rotationSchedule Json?     // Leadership rotation data
+  resources        Json?     // Nation resources
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
--- Account linking system
-CREATE TABLE linking_codes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER REFERENCES users(id),
-    code TEXT NOT NULL UNIQUE,
-    platforms_linked TEXT, -- JSON array: discord, minecraft, website
-    expiry_date DATE NOT NULL,
-    status TEXT DEFAULT 'active', -- active, used, expired
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+  // Relations
+  leader           Character? @relation("NationLeader", fields: [leaderId], references: [id])
+  members          Character[]
+  towns            Town[]
 
--- Comprehensive logging system
-CREATE TABLE log_entries (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    severity TEXT NOT NULL, -- debug, info, warning, error, critical
-    plugin TEXT, -- api, website, discord, minecraft
-    action TEXT NOT NULL,
-    details TEXT, -- JSON with detailed information
-    user_id INTEGER REFERENCES users(id)
-);
+  @@map("nations")
+}
+
+// Town management within nations
+model Town {
+  id         Int       @id @default(autoincrement())
+  name       String
+  nationId   Int?
+  founderId  Int
+  members    Json      // Array of character IDs
+  resources  Json?     // Town-specific resources
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  // Relations
+  nation     Nation?   @relation(fields: [nationId], references: [id])
+  founder    Character @relation("TownFounder", fields: [founderId], references: [id])
+
+  @@map("towns")
+}
+
+// Lore management with versioning
+model Lore {
+  id                   Int           @id @default(autoincrement())
+  title                String
+  content              String
+  authorId             Int
+  category             String        // Nation, Town, Character, Events
+  tags                 Json          // Array of tags
+  verified             Boolean       @default(false)
+  public               Boolean       @default(true)
+  aiModerationStatus   String        @default("pending")
+  references           Json?         // Array of hyperlinks to other lore
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  // Relations
+  author               User          @relation(fields: [authorId], references: [id])
+  versions             LoreVersion[]
+
+  @@map("lore")
+}
+
+// Lore version control
+model LoreVersion {
+  id        Int      @id @default(autoincrement())
+  loreId    Int
+  content   String
+  authorId  Int
+  timestamp DateTime @default(now())
+  status    String   @default("draft") // draft, approved, rejected
+
+  // Relations
+  lore      Lore     @relation(fields: [loreId], references: [id])
+
+  @@map("lore_versions")
+}
+
+// Economic transactions
+model Economy {
+  id              Int       @id @default(autoincrement())
+  userId          Int       @unique
+  balance         Int       @default(0)
+  lastTransaction DateTime?
+  bankTransfers   Json?     // Array of transfer history
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("economy")
+}
+
+// Moderation and punishment system
+model Punishment {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  type        String    // strike, tempban, permban, warning
+  reason      String
+  moderatorId Int
+  active      Boolean   @default(true)
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@map("punishments")
+}
+
+// Account linking system
+model LinkingCode {
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  code             String   @unique
+  platformsLinked  Json     // Array: discord, minecraft, website
+  expiryDate       DateTime
+  status           String   @default("active") // active, used, expired
+  createdAt        DateTime @default(now())
+
+  // Relations
+  user             User     @relation(fields: [userId], references: [id])
+
+  @@map("linking_codes")
+}
+
+// Comprehensive logging system
+model LogEntry {
+  id         Int      @id @default(autoincrement())
+  timestamp  DateTime @default(now())
+  severity   String   // debug, info, warning, error, critical
+  plugin     String   // api, website, discord, minecraft
+  action     String
+  details    Json?    // Detailed information
+  userId     Int?
+
+  // Relations
+  user       User?    @relation(fields: [userId], references: [id])
+
+  @@map("log_entries")
+}
 ```
+
+### Key Features of the Schema:
+- **Type Safety**: Full TypeScript support with generated types
+- **Relationships**: Proper foreign key constraints and relations
+- **JSON Support**: Flexible JSON fields for complex data structures
+- **Migrations**: Automatic migration generation and management
+- **Database Agnostic**: Works with PostgreSQL (production) and SQLite (development)
+- **Modern Syntax**: Uses Prisma's declarative schema language
 
 ## API Endpoint Specification
 
@@ -234,38 +307,61 @@ CREATE TABLE log_entries (
 
 ## Component Implementation Details
 
-### 1. Central API (Flask RESTful)
+### 1. Central API (Node.js + Express.js)
 
 **Key Features:**
 - RESTful API design with consistent response formats
 - JWT-based authentication with role-based access control
-- Comprehensive input validation and sanitization
-- Rate limiting to prevent abuse (100 requests/minute per user)
-- Extensive logging for all operations
+- Comprehensive input validation and sanitization using Joi/Zod
+- Rate limiting to prevent abuse (100 requests/minute per user) via express-rate-limit
+- Extensive logging for all operations using Winston
 - Health monitoring and automatic failover mechanisms
 
 **Security Implementation:**
 - All endpoints require authentication except public lore reading
-- SQL injection prevention through parameterized queries
-- XSS protection with input sanitization
+- SQL injection prevention through parameterized queries (Prisma ORM)
+- XSS protection with input sanitization using express-validator
 - CORS properly configured for website and Discord bot origins
 - API key rotation system for Minecraft plugin authentication
+- Helmet.js for additional security headers
 
-### 2. Website (Flask Frontend)
+**Technology Stack:**
+- **Runtime**: Node.js 18+ for optimal performance
+- **Framework**: Express.js with TypeScript for type safety
+- **ORM**: Prisma for database operations and migrations
+- **Validation**: Zod for request/response validation
+- **Authentication**: jsonwebtoken for JWT handling
+- **Rate Limiting**: express-rate-limit and redis for distributed limiting
+- **Logging**: Winston with log rotation and structured logging
+
+### 2. Website (Next.js + React Frontend)
 
 **UI/UX Design:**
 - Minecraft-themed interface with pixelated fonts (Minecraft font)
-- Book texture backgrounds for content areas
+- Book texture backgrounds for content areas using CSS/styled-components
 - Item hover effects showing tooltips (similar to Minecraft inventory)
-- Responsive design for mobile and desktop access
+- Responsive design for mobile and desktop access using Tailwind CSS
 - Dark/light theme toggle matching Minecraft aesthetics
+- Component-based architecture for reusable UI elements
 
 **Technical Implementation:**
-- Server-side rendering with Jinja2 templates
-- AJAX calls for dynamic content updates
-- WebSocket integration for real-time notifications
-- Progressive Web App (PWA) capabilities
-- Accessibility compliance (WCAG 2.1 AA)
+- Server-side rendering (SSR) and static generation (SSG) with Next.js
+- Client-side hydration for dynamic content updates
+- Socket.io integration for real-time notifications
+- Progressive Web App (PWA) capabilities with next-pwa
+- Accessibility compliance (WCAG 2.1 AA) with react-aria
+- TypeScript for type safety and better developer experience
+- React Query for efficient data fetching and caching
+
+**State Management:**
+- React Context API for global state management
+- React Hook Form for form handling and validation
+- Local storage for user preferences and session data
+
+**Styling & Animation:**
+- Tailwind CSS for rapid UI development
+- Framer Motion for smooth animations and transitions
+- CSS-in-JS with styled-components for component-specific styles
 
 ### 3. Discord Bot (Pycord)
 
@@ -367,18 +463,28 @@ services:
   api:
     build: ./api
     environment:
-      - DATABASE_URL=sqlite:///valorstone.db
+      - DATABASE_URL=postgresql://user:password@db:5432/valorstone
       - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - REDIS_URL=redis://redis:6379
     volumes:
-      - ./data:/app/data
+      - ./api/uploads:/app/uploads
+    depends_on:
+      - db
+      - redis
     
   website:
     build: ./website
     depends_on:
       - api
     environment:
-      - API_URL=http://api:5000
+      - NEXT_PUBLIC_API_URL=http://api:3001
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
     
   discord-bot:
     build: ./discord-bot
@@ -386,7 +492,25 @@ services:
       - api
     environment:
       - DISCORD_TOKEN=${DISCORD_TOKEN}
-      - API_URL=http://api:5000
+      - API_URL=http://api:3001
+  
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=valorstone
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
 ```
 
 ## Performance Considerations
