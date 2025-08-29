@@ -10,7 +10,7 @@ ValorStone Network follows a microservices architecture with a central API actin
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Website       │    │  Discord Bot    │    │ Minecraft Plugin│
-│   (Flask)       │    │   (Pycord)      │    │   (Spigot API)  │
+│ (Next.js/React) │    │   (Pycord)      │    │   (Spigot API)  │
 └─────────┬───────┘    └─────────┬───────┘    └─────────┬───────┘
           │                      │                      │
           │              HTTP API Calls                 │
@@ -19,29 +19,32 @@ ValorStone Network follows a microservices architecture with a central API actin
                                  │
                     ┌─────────────────┐
                     │   Central API   │
-                    │ (Flask RESTful) │
+                    │(Node.js/Express)│
                     │                 │
-                    │   SQLite3 DB    │
+                    │  PostgreSQL DB  │
                     └─────────────────┘
 ```
 
 ## Technology Stack
 
 ### Core Technologies
-- **Backend API**: Python 3.11+ with Flask and Flask-RESTful
-- **Frontend**: Python Flask with Jinja2 templating, HTML5, CSS3, JavaScript
+- **Backend API**: Node.js 18+ with Next.js API routes and Express.js
+- **Frontend**: Next.js with React 18+, TypeScript, Tailwind CSS
 - **Discord Bot**: Python with Pycord library
 - **Minecraft Plugin**: Java 17+ with Spigot API 1.20+
-- **Database**: SQLite3 (initial implementation, upgradeable to PostgreSQL)
-- **Authentication**: OAuth2 for Discord, custom JWT for Minecraft/Website
+- **Database**: PostgreSQL 15+ (production), SQLite3 (development)
+- **Authentication**: NextAuth.js for OAuth2 Discord integration, JWT for Minecraft
+- **Real-time Communication**: Socket.io for WebSocket functionality
 - **AI Integration**: OpenAI API for content moderation
 
 ### Development Tools
 - **Version Control**: Git with GitHub
+- **Package Management**: npm/yarn for Node.js dependencies
 - **Containerization**: Docker for API and Website deployment
-- **Testing**: pytest for Python components, JUnit for Java plugin
+- **Testing**: Jest for JavaScript components, JUnit for Java plugin
 - **Documentation**: Markdown with GitHub Pages
 - **CI/CD**: GitHub Actions for automated testing and deployment
+- **Code Quality**: ESLint, Prettier, TypeScript for frontend/backend
 
 ## Database Schema Design
 
@@ -234,38 +237,61 @@ CREATE TABLE log_entries (
 
 ## Component Implementation Details
 
-### 1. Central API (Flask RESTful)
+### 1. Central API (Node.js + Express.js)
 
 **Key Features:**
 - RESTful API design with consistent response formats
 - JWT-based authentication with role-based access control
-- Comprehensive input validation and sanitization
-- Rate limiting to prevent abuse (100 requests/minute per user)
-- Extensive logging for all operations
+- Comprehensive input validation and sanitization using Joi/Zod
+- Rate limiting to prevent abuse (100 requests/minute per user) via express-rate-limit
+- Extensive logging for all operations using Winston
 - Health monitoring and automatic failover mechanisms
 
 **Security Implementation:**
 - All endpoints require authentication except public lore reading
-- SQL injection prevention through parameterized queries
-- XSS protection with input sanitization
+- SQL injection prevention through parameterized queries (Prisma ORM)
+- XSS protection with input sanitization using express-validator
 - CORS properly configured for website and Discord bot origins
 - API key rotation system for Minecraft plugin authentication
+- Helmet.js for additional security headers
 
-### 2. Website (Flask Frontend)
+**Technology Stack:**
+- **Runtime**: Node.js 18+ for optimal performance
+- **Framework**: Express.js with TypeScript for type safety
+- **ORM**: Prisma for database operations and migrations
+- **Validation**: Zod for request/response validation
+- **Authentication**: jsonwebtoken for JWT handling
+- **Rate Limiting**: express-rate-limit and redis for distributed limiting
+- **Logging**: Winston with log rotation and structured logging
+
+### 2. Website (Next.js + React Frontend)
 
 **UI/UX Design:**
 - Minecraft-themed interface with pixelated fonts (Minecraft font)
-- Book texture backgrounds for content areas
+- Book texture backgrounds for content areas using CSS/styled-components
 - Item hover effects showing tooltips (similar to Minecraft inventory)
-- Responsive design for mobile and desktop access
+- Responsive design for mobile and desktop access using Tailwind CSS
 - Dark/light theme toggle matching Minecraft aesthetics
+- Component-based architecture for reusable UI elements
 
 **Technical Implementation:**
-- Server-side rendering with Jinja2 templates
-- AJAX calls for dynamic content updates
-- WebSocket integration for real-time notifications
-- Progressive Web App (PWA) capabilities
-- Accessibility compliance (WCAG 2.1 AA)
+- Server-side rendering (SSR) and static generation (SSG) with Next.js
+- Client-side hydration for dynamic content updates
+- Socket.io integration for real-time notifications
+- Progressive Web App (PWA) capabilities with next-pwa
+- Accessibility compliance (WCAG 2.1 AA) with react-aria
+- TypeScript for type safety and better developer experience
+- React Query for efficient data fetching and caching
+
+**State Management:**
+- React Context API for global state management
+- React Hook Form for form handling and validation
+- Local storage for user preferences and session data
+
+**Styling & Animation:**
+- Tailwind CSS for rapid UI development
+- Framer Motion for smooth animations and transitions
+- CSS-in-JS with styled-components for component-specific styles
 
 ### 3. Discord Bot (Pycord)
 
@@ -367,18 +393,28 @@ services:
   api:
     build: ./api
     environment:
-      - DATABASE_URL=sqlite:///valorstone.db
+      - DATABASE_URL=postgresql://user:password@db:5432/valorstone
       - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - REDIS_URL=redis://redis:6379
     volumes:
-      - ./data:/app/data
+      - ./api/uploads:/app/uploads
+    depends_on:
+      - db
+      - redis
     
   website:
     build: ./website
     depends_on:
       - api
     environment:
-      - API_URL=http://api:5000
+      - NEXT_PUBLIC_API_URL=http://api:3001
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
     
   discord-bot:
     build: ./discord-bot
@@ -386,7 +422,25 @@ services:
       - api
     environment:
       - DISCORD_TOKEN=${DISCORD_TOKEN}
-      - API_URL=http://api:5000
+      - API_URL=http://api:3001
+  
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=valorstone
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
 ```
 
 ## Performance Considerations
