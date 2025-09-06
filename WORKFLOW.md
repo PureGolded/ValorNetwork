@@ -10,7 +10,7 @@ This document outlines the complete development workflow, testing procedures, an
 #### Project Setup & Database Design
 - [ ] Set up development environment and version control
 - [ ] Create project structure for all components
-- [ ] Design and implement SQLite3 database schema
+- [ ] Design and implement PostgreSQL database schema with Prisma
   - [ ] User table with verification fields
   - [ ] Character table with detailed fields (name, surname, additional_name, age, family_connections, lore)
   - [ ] Nation and Town tables with hierarchy
@@ -18,31 +18,31 @@ This document outlines the complete development workflow, testing procedures, an
   - [ ] Economy and transaction tables
   - [ ] Punishment and linking code tables
   - [ ] Comprehensive logging table
-- [ ] Set up database migrations and backup system
+- [ ] Set up database migrations and backup system with Prisma
 - [ ] Implement basic encryption for sensitive data
 
 #### Core API Development
-- [ ] Set up Flask application structure
-- [ ] Implement authentication system (OAuth2 for Discord, custom for Minecraft)
+- [ ] Set up Node.js application structure with TypeScript
+- [ ] Implement authentication system (NextAuth.js for Discord OAuth2, custom JWT for Minecraft)
 - [ ] Create user registration and verification endpoints
 - [ ] Implement account linking system with daily codes
-- [ ] Create character CRUD operations
+- [ ] Create character CRUD operations with Prisma ORM
 - [ ] Implement lore management endpoints
 - [ ] Add nation and town management endpoints
 - [ ] Create economy and transaction endpoints
 
 ####  API Security & Validation
-- [ ] Implement data validation for all endpoints
-- [ ] Add rate limiting and abuse prevention
+- [ ] Implement data validation for all endpoints using Zod
+- [ ] Add rate limiting and abuse prevention with express-rate-limit
 - [ ] Create comprehensive error handling
-- [ ] Implement logging system for all API calls
+- [ ] Implement logging system for all API calls using Winston
 - [ ] Add health check endpoints
 - [ ] Create maintenance mode functionality
 - [ ] Implement ALT detection mechanisms
 
 #### API Testing & Documentation
-- [ ] Write unit tests for all API endpoints
-- [ ] Create API documentation
+- [ ] Write unit tests for all API endpoints using Jest
+- [ ] Create API documentation with OpenAPI/Swagger
 - [ ] Implement database testing commands
 - [ ] Set up automated health checks
 - [ ] Create backup and recovery procedures
@@ -51,15 +51,15 @@ This document outlines the complete development workflow, testing procedures, an
 ### Phase 2: Website Development
 
 #### Frontend Foundation
-- [ ] Set up Flask frontend structure
-- [ ] Implement Minecraft-themed UI components
+- [ ] Set up Next.js application structure with TypeScript
+- [ ] Implement Minecraft-themed UI components with React
   - [ ] Pixelated fonts integration
   - [ ] Themed buttons and graphics
   - [ ] Book texture backgrounds
   - [ ] Item hover context windows
-- [ ] Create responsive layout system
+- [ ] Create responsive layout system with Tailwind CSS
 - [ ] Implement user registration interface with application process
-- [ ] Create login/logout functionality
+- [ ] Create login/logout functionality with NextAuth.js
 
 #### Character & Lore Management
 - [ ] Build character creation form
